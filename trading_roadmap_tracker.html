@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #13161b;
+    --surface2: #1a1e26;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --dim: #3d4452;
+    --green: #22c97a;
+    --green-dim: rgba(34,201,122,0.12);
+    --green-glow: rgba(34,201,122,0.25);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --blue: #4f8ef7;
+    --blue-dim: rgba(79,142,247,0.12);
+    --coral: #ff6b6b;
+    --coral-dim: rgba(255,107,107,0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  .header { padding: 28px 32px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .header-title { font-family: var(--mono); font-size: 11px; color: var(--green); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 6px; }
+  .header-name { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -.02em; }
+  .header-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .header-stats { display: flex; gap: 24px; align-items: flex-end; }
+  .stat { text-align: right; }
+  .stat-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--green); line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: .08em; }
+
+  .overall-bar { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .bar-track { flex: 1; height: 4px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 4px; background: var(--green); border-radius: 2px; transition: width .6s cubic-bezier(.4,0,.2,1); box-shadow: 0 0 8px var(--green-glow); }
+  .bar-pct { font-family: var(--mono); font-size: 12px; color: var(--green); min-width: 36px; text-align: right; }
+  .bar-label { font-size: 11px; color: var(--muted); min-width: 110px; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 120px); }
+
+  .sidebar { border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; height: calc(100vh - 120px); overflow-y: auto; }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+  .sidebar-section { padding: 0 16px; margin-bottom: 4px; }
+  .sidebar-label { font-size: 10px; font-family: var(--mono); color: var(--dim); letter-spacing: .12em; text-transform: uppercase; padding: 12px 8px 6px; }
+  .sidebar-divider { height: 1px; background: var(--border); margin: 8px 16px; }
+
+  .phase-btn { width: 100%; background: none; border: none; cursor: pointer; padding: 10px 8px; border-radius: 8px; display: flex; align-items: center; gap: 10px; text-align: left; transition: background .15s; margin-bottom: 2px; }
+  .phase-btn:hover { background: var(--surface2); }
+  .phase-btn.active { background: var(--surface2); }
+  .phase-ring { width: 36px; height: 36px; flex-shrink: 0; position: relative; }
+  .phase-ring svg { width: 36px; height: 36px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--dim); stroke-width: 3; }
+  .ring-fill { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1); }
+  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; }
+  .phase-info { flex: 1; min-width: 0; }
+  .phase-info-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .phase-info-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+
+  .day-nav { padding: 0 16px; }
+  .day-btn { width: 100%; background: none; border: none; cursor: pointer; padding: 8px 8px; border-radius: 6px; display: flex; align-items: center; gap: 8px; text-align: left; transition: background .15s; margin-bottom: 1px; }
+  .day-btn:hover { background: var(--surface2); }
+  .day-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid var(--dim); transition: background .2s, border-color .2s; }
+  .day-dot.done { background: var(--green); border-color: var(--green); }
+  .day-btn-label { font-size: 12px; color: var(--muted); flex: 1; }
+  .day-count { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+  .main { padding: 28px 32px; overflow-y: auto; max-height: calc(100vh - 120px); }
+  .main::-webkit-scrollbar { width: 4px; }
+  .main::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+  .phase-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .phase-header-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  .phase-header-name { font-size: 20px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 4px; }
+  .phase-header-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 11px; }
+  .meta-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .5; }
+
+  .day-section { margin-bottom: 20px; }
+  .day-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; user-select: none; padding: 4px 0; }
+  .day-header-num { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .day-header-title { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .day-header-progress { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .day-header-chevron { color: var(--dim); font-size: 10px; transition: transform .2s; }
+  .day-header.collapsed .day-header-chevron { transform: rotate(-90deg); }
+  .day-mini-bar { flex-shrink: 0; width: 60px; height: 3px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+  .day-mini-fill { height: 3px; background: var(--green); border-radius: 2px; transition: width .4s; }
+
+  .task-list { display: flex; flex-direction: column; gap: 2px; overflow: hidden; transition: max-height .3s cubic-bezier(.4,0,.2,1); }
+  .task-list.collapsed { max-height: 0 !important; }
+
+  .task-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+  .task-item:hover { background: var(--surface2); }
+  .task-item.done { opacity: .55; }
+  .task-item.done:hover { opacity: .75; }
+  .task-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--dim); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+  .task-item.done .task-check { background: var(--green); border-color: var(--green); }
+  .task-check-inner { width: 6px; height: 10px; border: 2px solid #0d0f12; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px, -1px); opacity: 0; transition: opacity .15s; }
+  .task-item.done .task-check-inner { opacity: 1; }
+  .task-body { flex: 1; min-width: 0; }
+  .task-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; line-height: 1.4; }
+  .task-item.done .task-title { text-decoration: line-through; color: var(--muted); }
+  .task-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .task-item.done .task-desc { color: var(--dim); }
+  .task-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+  .task-tag { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 99px; letter-spacing: .04em; }
+  .tag-free { background: var(--green-dim); color: var(--green); }
+  .tag-time { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+  .tag-key { background: var(--blue-dim); color: var(--blue); }
+  .tag-concept { background: var(--purple-dim); color: var(--purple); }
+  .task-section-head { font-size: 10px; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .12em; padding: 12px 12px 4px; }
+
+  .concepts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .concept-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .concept-card.learned { border-color: var(--green); background: var(--green-dim); }
+  .concept-card-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .concept-card.learned .concept-card-name { color: var(--green); }
+  .concept-card-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .concept-badge { display: inline-block; font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 99px; margin-top: 8px; }
+
+  .locked-overlay { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; gap: 12px; }
+  .locked-icon { font-size: 32px; opacity: .3; }
+  .locked-text { font-size: 14px; color: var(--muted); }
+  .locked-sub { font-size: 12px; color: var(--dim); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .main > * { animation: fadeIn .22s ease both; }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .header { padding: 20px; }
+    .main { padding: 20px; max-height: none; }
+    .overall-bar { padding: 12px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">// systematic trading roadmap</div>
+    <div class="header-name">Path to Passive Automation</div>
+    <div class="header-sub">$1k–$5k starting capital · 1–2 hrs/day · 12-month runway</div>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-val" id="total-done">0</div>
+      <div class="stat-label">tasks done</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="days-done" style="color:var(--amber)">0</div>
+      <div class="stat-label">days complete</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="concepts-done" style="color:var(--purple)">0</div>
+      <div class="stat-label">concepts learned</div>
+    </div>
+  </div>
+</div>
+
+<div class="overall-bar">
+  <div class="bar-label">Overall progress</div>
+  <div class="bar-track"><div class="bar-fill" id="overall-fill" style="width:0%"></div></div>
+  <div class="bar-pct" id="overall-pct">0%</div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-label">Phases</div>
+    <div class="sidebar-section" id="phase-nav"></div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">Days — current phase</div>
+    <div class="day-nav" id="day-nav"></div>
+  </div>
+  <div class="main" id="main-content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'trading_roadmap_v2';
+
+const PHASES = [
+  {
+    id:'p1', name:'Foundation', subtitle:'Learn the landscape',
+    months:'Months 1–2', cost:'Free', colorVal:'#22c97a',
+    days:[
+      {
+        id:'d1', title:'Setup & first look',
+        sections:[
+          { label:'Accounts to create', tasks:[
+            {id:'t1',title:'Create TradingView account',desc:'tradingview.com → sign up free. Choose the free plan — don\'t upgrade yet.',tags:['free','5 min']},
+            {id:'t2',title:'Create Composer account',desc:'composer.trade → sign up free. No-code strategy builder and backtester.',tags:['free','5 min']},
+            {id:'t3',title:'Create Alpaca paper trading account',desc:'alpaca.markets → sign up free → enable paper trading. No real money needed yet.',tags:['free','5 min']},
+          ]},
+          { label:'First explorations', tasks:[
+            {id:'t4',title:'Open SPY on TradingView and just look',desc:'Search "SPY" → daily chart. Look at 5 years of history. Notice trends, drops, sideways stretches.',tags:['10 min']},
+            {id:'t5',title:'Browse the Composer community library',desc:'Composer → Discover → browse top strategies. Read names and descriptions only.',tags:['10 min']},
+            {id:'t6',title:'Read one Composer strategy in detail',desc:'Click any top-rated strategy → read the logic tree. Understand what it checks and when it buys or sells.',tags:['key habit','10 min']},
+          ]},
+          { label:'Vocabulary', tasks:[
+            {id:'t7',title:'Learn what Sharpe ratio means',desc:'Ask Claude: "explain Sharpe ratio like I\'m a beginner trader"',tags:['concept','5 min']},
+            {id:'t8',title:'Learn what maximum drawdown means',desc:'Ask Claude: "explain maximum drawdown with a simple example"',tags:['concept','5 min']},
+            {id:'t9',title:'Write Day 1 journal entry',desc:'Today\'s date, why you\'re doing this, what you want to earn in 12 months. Be specific.',tags:['key habit','5 min']},
+          ]},
+        ]
+      },
+      {
+        id:'d2', title:'Strategy logic & chart basics',
+        sections:[
+          { label:'Core concepts', tasks:[
+            {id:'t10',title:'Learn what momentum means in trading',desc:'Ask Claude: "explain momentum strategy for beginners"',tags:['concept','10 min']},
+            {id:'t11',title:'Learn what mean reversion means',desc:'Ask Claude: "explain mean reversion strategy for beginners"',tags:['concept','10 min']},
+            {id:'t12',title:'Understand why momentum and mean reversion conflict',desc:'Ask Claude: "why do momentum and mean reversion contradict each other?"',tags:['concept','5 min']},
+          ]},
+          { label:'TradingView hands-on', tasks:[
+            {id:'t13',title:'Add a 200-day moving average to SPY',desc:'TradingView → SPY daily → Indicators → "Moving Average" → set length 200.',tags:['10 min']},
+            {id:'t14',title:'Compare QQQ to SPY',desc:'Open QQQ on a second tab. Notice how it moves more dramatically than SPY.',tags:['10 min']},
+          ]},
+          { label:'Composer & metrics', tasks:[
+            {id:'t15',title:'Find a momentum strategy in Composer',desc:'Composer → Discover → search "momentum" → read the top result\'s logic tree slowly.',tags:['free','10 min']},
+            {id:'t16',title:'Learn what profit factor means',desc:'Ask Claude: "explain profit factor for beginner traders"',tags:['concept','5 min']},
+            {id:'t17',title:'Write Day 2 journal entry',desc:'Which strategy type appeals more — momentum or mean reversion — and why?',tags:['key habit','5 min']},
+          ]},
+        ]
+      },
+      {
+        id:'d3', title:'Inside Composer — reading strategy rules',
+        sections:[
+          { label:'Composer deep dive', tasks:[
+            {id:'t18',title:'Open the Composer logic builder',desc:'New symphony → explore the drag-and-drop interface. Don\'t build yet — just map what\'s available.',tags:['free','10 min']},
+            {id:'t19',title:'Identify the if/then structure in a strategy',desc:'Pick any community strategy → find where it says IF [condition] THEN [action]. Every systematic strategy is nested if/thens.',tags:['key habit','10 min']},
+            {id:'t20',title:'Find the rebalancing frequency setting',desc:'In any strategy, find where it sets how often it checks and rebalances. Notice daily vs monthly strategies.',tags:['10 min']},
+          ]},
+          { label:'New concepts', tasks:[
+            {id:'t21',title:'Learn what RSI means',desc:'Ask Claude: "explain RSI indicator for beginner traders". This is the signal you\'ll use for mean reversion.',tags:['concept','10 min']},
+            {id:'t22',title:'Add RSI to SPY chart in TradingView',desc:'TradingView → SPY → Indicators → search "RSI" → add. Watch for values below 30 (oversold) and above 70 (overbought).',tags:['10 min']},
+          ]},
+          { label:'Review', tasks:[
+            {id:'t23',title:'Review your 3 gate check metrics',desc:'Write them from memory: Sharpe > ?, max drawdown < ?, profit factor > ?. Check your notes if needed.',tags:['key habit','5 min']},
+            {id:'t24',title:'Write Day 3 journal entry',desc:'What did the Composer logic builder make clearer? What\'s still confusing? Be specific.',tags:['key habit','5 min']},
+          ]},
+        ]
+      },
+      {
+        id:'d4', title:'Your first backtest — reading the numbers',
+        sections:[
+          { label:'Backtest fundamentals', tasks:[
+            {id:'t25',title:'Learn what a backtest is and what it can\'t tell you',desc:'Ask Claude: "what is backtesting and what are its limitations?" Understanding the gaps is more important than running the numbers.',tags:['concept','10 min']},
+            {id:'t26',title:'Open a community strategy backtest in Composer',desc:'Any strategy → click Backtest → read the results panel. Find Sharpe, max drawdown, and profit factor.',tags:['free','10 min']},
+            {id:'t27',title:'Find the equity curve on the backtest',desc:'In the same backtest, look at the equity curve chart. Does it look smooth or jagged? Are there long flat periods?',tags:['10 min']},
+          ]},
+          { label:'Critical reading', tasks:[
+            {id:'t28',title:'Look at the worst drawdown period on the curve',desc:'Find where the equity curve dropped the most. How long did it last before recovering? Could you have held through that?',tags:['key habit','10 min']},
+            {id:'t29',title:'Check the number of trades in the backtest',desc:'Find total trades count. Is it above 200? Below 50 trades means the results are statistically unreliable.',tags:['10 min']},
+          ]},
+          { label:'Journal', tasks:[
+            {id:'t30',title:'Write Day 4 journal entry',desc:'What surprised you most about looking at a real backtest? What questions do you still have?',tags:['key habit','5 min']},
+          ]},
+        ]
+      },
+    ]
+  },
+  {
+    id:'p2', name:'Strategy Building', subtitle:'Build 2–3 systems',
+    months:'Months 2–3', cost:'Free', colorVal:'#22c97a', locked:true, days:[]
+  },
+  {
+    id:'p3', name:'Backtesting', subtitle:'Validate rigorously',
+    months:'Months 3–4', cost:'Free', colorVal:'#f5a623', locked:true, days:[]
+  },
+  {
+    id:'p4', name:'Paper Trading', subtitle:'Live conditions, fake money',
+    months:'Months 4–7', cost:'Free', colorVal:'#a78bfa', locked:true, days:[]
+  },
+  {
+    id:'p5', name:'Live — Small Size', subtitle:'Real money, small position',
+    months:'Months 8–10', cost:'~$500', colorVal:'#ff6b6b', locked:true, days:[]
+  },
+  {
+    id:'p6', name:'Full Automation', subtitle:'Passive, scaled system',
+    months:'Month 11+', cost:'$1k–$5k', colorVal:'#4f8ef7', locked:true, days:[]
+  },
+];
+
+const CONCEPTS = [
+  {id:'c1',name:'Sharpe ratio',desc:'Return per unit of risk taken',taskId:'t7'},
+  {id:'c2',name:'Max drawdown',desc:'Worst peak-to-trough drop',taskId:'t8'},
+  {id:'c3',name:'Profit factor',desc:'Total wins ÷ total losses',taskId:'t16'},
+  {id:'c4',name:'Momentum',desc:'Winners keep winning, for a while',taskId:'t10'},
+  {id:'c5',name:'Mean reversion',desc:'Extremes correct back to average',taskId:'t11'},
+  {id:'c6',name:'RSI',desc:'Relative Strength Index signal',taskId:'t21'},
+  {id:'c7',name:'Moving average',desc:'Smoothed average price over N days',taskId:'t13'},
+  {id:'c8',name:'Backtesting',desc:'Testing strategy on historical data',taskId:'t25'},
+];
+
+let state = { done:{}, collapsed:{}, activePhase:'p1' };
+
+function load() {
+  try { const s=localStorage.getItem(STORAGE_KEY); if(s) state={...state,...JSON.parse(s)}; } catch(e){}
+  // Pre-mark completed tasks from our conversation
+  ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14','t15','t16','t17'].forEach(id=>{
+    if(state.done[id]===undefined) state.done[id]=true;
+  });
+}
+
+function save() { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){} }
+
+function allTasks() {
+  let t=[]; PHASES.forEach(p=>p.days.forEach(d=>d.sections.forEach(s=>t=t.concat(s.tasks)))); return t;
+}
+
+function dayProgress(day) {
+  let done=0,total=0;
+  day.sections.forEach(s=>s.tasks.forEach(t=>{total++;if(state.done[t.id])done++;}));
+  return {done,total};
+}
+
+function phaseProgress(phase) {
+  let done=0,total=0;
+  phase.days.forEach(d=>{const p=dayProgress(d);done+=p.done;total+=p.total;});
+  return {done,total};
+}
+
+function daysComplete() {
+  let n=0; PHASES.forEach(p=>p.days.forEach(d=>{const {done,total}=dayProgress(d);if(done===total&&total>0)n++;})); return n;
+}
+
+function conceptsDone() {
+  return CONCEPTS.filter(c=>state.done[c.taskId]).length;
+}
+
+function updateStats() {
+  const total=allTasks().length, done=Object.keys(state.done).filter(k=>state.done[k]).length;
+  document.getElementById('total-done').textContent=done;
+  document.getElementById('days-done').textContent=daysComplete();
+  document.getElementById('concepts-done').textContent=conceptsDone();
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('overall-fill').style.width=pct+'%';
+  document.getElementById('overall-pct').textContent=pct+'%';
+}
+
+function renderSidebar() {
+  // Phase nav
+  const nav=document.getElementById('phase-nav');
+  nav.innerHTML='';
+  PHASES.forEach(phase=>{
+    const {done,total}=phaseProgress(phase);
+    const pct=total>0?done/total:0;
+    const C=2*Math.PI*14;
+    const offset=C*(1-pct);
+    const btn=document.createElement('button');
+    btn.className='phase-btn'+(state.activePhase===phase.id?' active':'');
+    btn.innerHTML=`
+      <div class="phase-ring">
+        <svg viewBox="0 0 36 36">
+          <circle class="ring-bg" cx="18" cy="18" r="14"/>
+          <circle class="ring-fill" cx="18" cy="18" r="14" stroke="${phase.colorVal}"
+            stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
+        </svg>
+        <div class="ring-num" style="color:${phase.colorVal}">${phase.id.replace('p','')}</div>
+      </div>
+      <div class="phase-info">
+        <div class="phase-info-name">${phase.name}</div>
+        <div class="phase-info-meta">${total>0?done+'/'+total+' tasks':phase.months}</div>
+      </div>`;
+    btn.onclick=()=>{state.activePhase=phase.id;save();renderAll();};
+    nav.appendChild(btn);
+  });
+
+  // Day quick-jump
+  const dayNav=document.getElementById('day-nav');
+  dayNav.innerHTML='';
+  const ap=PHASES.find(p=>p.id===state.activePhase);
+  if(ap&&ap.days.length>0){
+    ap.days.forEach((day,i)=>{
+      const {done,total}=dayProgress(day);
+      const complete=done===total&&total>0;
+      const btn=document.createElement('button');
+      btn.className='day-btn';
+      btn.innerHTML=`
+        <div class="day-dot${complete?' done':''}"></div>
+        <div class="day-btn-label">Day ${i+1}: ${day.title}</div>
+        <div class="day-count">${done}/${total}</div>`;
+      btn.onclick=()=>document.getElementById('day-'+day.id)?.scrollIntoView({behavior:'smooth',block:'start'});
+      dayNav.appendChild(btn);
+    });
+  }
+}
+
+function renderMain() {
+  const main=document.getElementById('main-content');
+  main.innerHTML='';
+  const phase=PHASES.find(p=>p.id===state.activePhase);
+  if(!phase) return;
+
+  // Phase header
+  const {done,total}=phaseProgress(phase);
+  const hdr=document.createElement('div');
+  hdr.className='phase-header';
+  hdr.innerHTML=`
+    <div class="phase-header-icon" style="background:${phase.colorVal}1a;color:${phase.colorVal};border:1px solid ${phase.colorVal}33">
+      P${phase.id.replace('p','')}
+    </div>
+    <div>
+      <div class="phase-header-name" style="color:${phase.colorVal}">${phase.name}</div>
+      <div class="phase-header-meta">
+        <span class="meta-chip" style="color:var(--muted)">${phase.months}</span>
+        <span class="meta-chip" style="color:var(--muted)">${phase.cost}</span>
+        ${total>0?`<span class="meta-chip" style="color:${phase.colorVal}">${done}/${total} tasks</span>`:''}
+      </div>
+    </div>`;
+  main.appendChild(hdr);
+
+  if(phase.locked){
+    const lock=document.createElement('div');
+    lock.className='locked-overlay';
+    lock.innerHTML=`
+      <div class="locked-icon">🔒</div>
+      <div class="locked-text">Complete Phase ${parseInt(phase.id.replace('p',''))-1} to unlock</div>
+      <div class="locked-sub">${phase.subtitle} · ${phase.months}</div>`;
+    main.appendChild(lock);
+    return;
+  }
+
+  // Days
+  phase.days.forEach((day,di)=>{
+    const {done,total}=dayProgress(day);
+    const pct=total>0?Math.round(done/total*100):0;
+    const collapsed=state.collapsed[day.id];
+
+    const sec=document.createElement('div');
+    sec.className='day-section';
+    sec.id='day-'+day.id;
+
+    const dh=document.createElement('div');
+    dh.className='day-header'+(collapsed?' collapsed':'');
+    dh.innerHTML=`
+      <div class="day-header-num">Day ${di+1}</div>
+      <div class="day-header-title">${day.title}</div>
+      <div class="day-mini-bar"><div class="day-mini-fill" style="width:${pct}%"></div></div>
+      <div class="day-header-progress">${done}/${total}</div>
+      <div class="day-header-chevron">▾</div>`;
+    dh.onclick=()=>{state.collapsed[day.id]=!state.collapsed[day.id];save();renderAll();};
+
+    const tl=document.createElement('div');
+    tl.className='task-list'+(collapsed?' collapsed':'');
+    if(!collapsed) tl.style.maxHeight='9999px';
+
+    day.sections.forEach(section=>{
+      const sh=document.createElement('div');
+      sh.className='task-section-head';
+      sh.textContent=section.label;
+      tl.appendChild(sh);
+
+      section.tasks.forEach(task=>{
+        const isDone=!!state.done[task.id];
+        const item=document.createElement('div');
+        item.className='task-item'+(isDone?' done':'');
+        const tagHtml=(task.tags||[]).map(tag=>{
+          const cls=tag==='free'?'tag-free':tag==='key habit'?'tag-key':tag==='concept'?'tag-concept':'tag-time';
+          return `<span class="task-tag ${cls}">${tag}</span>`;
+        }).join('');
+        item.innerHTML=`
+          <div class="task-check"><div class="task-check-inner"></div></div>
+          <div class="task-body">
+            <div class="task-title">${task.title}</div>
+            <div class="task-desc">${task.desc}</div>
+            <div class="task-tags">${tagHtml}</div>
+          </div>`;
+        item.onclick=()=>{state.done[task.id]=!state.done[task.id];save();renderAll();};
+        tl.appendChild(item);
+      });
+    });
+
+    sec.appendChild(dh);
+    sec.appendChild(tl);
+    main.appendChild(sec);
+  });
+
+  // Concepts grid for Phase 1
+  if(phase.id==='p1'){
+    const grid=document.createElement('div');
+    grid.className='concepts-grid';
+    const gh=document.createElement('div');
+    gh.style.cssText='grid-column:1/-1;font-size:10px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.12em;';
+    gh.textContent='Concepts tracker';
+    grid.appendChild(gh);
+    CONCEPTS.forEach(concept=>{
+      const learned=!!state.done[concept.taskId];
+      const card=document.createElement('div');
+      card.className='concept-card'+(learned?' learned':'');
+      card.innerHTML=`
+        <div class="concept-card-name">${concept.name}</div>
+        <div class="concept-card-desc">${concept.desc}</div>
+        <div class="concept-badge ${learned?'tag-free':'tag-time'}">${learned?'✓ learned':'pending'}</div>`;
+      grid.appendChild(card);
+    });
+    main.appendChild(grid);
+  }
+}
+
+function renderAll(){renderSidebar();renderMain();updateStats();}
+
+load();
+renderAll();
+</script>
+</body>
+</html>
